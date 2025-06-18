@@ -24,8 +24,7 @@ public class JWTUtils {
     @Value("${security.jwt.user.generator}")
     private String userGenerator;
 
-    public String createToken (Authentication authentication){
-
+    public String createToken(Authentication authentication) {
         Algorithm algorithm = Algorithm.HMAC256(privateKey);
         String userName = authentication.getPrincipal().toString();
 
@@ -34,17 +33,20 @@ public class JWTUtils {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
+        Date now = new Date();
+        Date expiration = new Date(System.currentTimeMillis() + (60 * 60 * 1000));
+
         return JWT.create()
                 .withIssuer(this.userGenerator)
                 .withSubject(userName)
-                .withClaim("authorities" , authorities)
-                .withIssuedAt(new Date())
-                .withExpiresAt(new Date(System.currentTimeMillis() + (30*60000)))
+                .withClaim("authorities", authorities)
+                .withIssuedAt(now)
+                .withNotBefore(now)
+                .withExpiresAt(expiration)
                 .withJWTId(UUID.randomUUID().toString())
-                .withNotBefore(new Date(System.currentTimeMillis() + (30*60000)))
                 .sign(algorithm);
-
     }
+
 
     public DecodedJWT validateToken (String token){
         try {
